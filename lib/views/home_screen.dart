@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../viewmodels/profile_viewmodel.dart';
 import '../widgets/portfolio_drawer.dart';
+import '../widgets/projects_section.dart';
 
 // Home Screen
 class HomeScreen extends StatefulWidget {
@@ -17,6 +18,7 @@ class _HomeScreenState extends State<HomeScreen> {
   final homeKey = GlobalKey();
   final aboutKey = GlobalKey();
   final skillsKey = GlobalKey();
+  final projectsKey = GlobalKey();
   // Section Keys End
 
   // Menu Navigation Section
@@ -25,6 +27,7 @@ class _HomeScreenState extends State<HomeScreen> {
       'Home': homeKey,
       'About Me': aboutKey,
       'Skills': skillsKey,
+      'Projects': projectsKey,
     };
 
     final target = sections[section]?.currentContext;
@@ -290,6 +293,11 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ),
                   // Skills End
+                  const SizedBox(height: 28),
+
+// Projects Section
+                  ProjectsSection(key: projectsKey),
+// Projects End
 
                   const SizedBox(height: 32),
 
