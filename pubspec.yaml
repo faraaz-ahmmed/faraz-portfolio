@@ -23,6 +23,7 @@ flutter:
 
   assets:
     - assets/images/app_icon.png
+    - assets/images/profile.png
 # Flutter Assets End
 
 # App Icon Settings
