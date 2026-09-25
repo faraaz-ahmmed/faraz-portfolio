@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../views/admin_login_screen.dart';
+
 // Portfolio Menu
 class PortfolioDrawer extends StatelessWidget {
   final void Function(String section) onSelected;
@@ -51,8 +53,18 @@ class PortfolioDrawer extends StatelessWidget {
                 title: Text(item.key),
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () {
-                  Navigator.pop(context);
-                  onSelected(item.key);
+                  final navigator = Navigator.of(context);
+                  navigator.pop();
+
+                  if (item.key == 'Admin Login') {
+                    navigator.push(
+                      MaterialPageRoute(
+                        builder: (_) => const AdminLoginScreen(),
+                      ),
+                    );
+                  } else {
+                    onSelected(item.key);
+                  }
                 },
               ),
             // Menu Items End

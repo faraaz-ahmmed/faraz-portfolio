@@ -3,6 +3,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:provider/provider.dart';
 
 import 'firebase_options.dart';
+import 'viewmodels/auth_viewmodel.dart';
 import 'viewmodels/profile_viewmodel.dart';
 import 'viewmodels/project_viewmodel.dart';
 import 'views/home_screen.dart';
@@ -21,12 +22,23 @@ Future<void> main() async {
   runApp(
     MultiProvider(
       providers: [
+        // Profile Provider
         ChangeNotifierProvider(
           create: (_) => ProfileViewModel(),
         ),
+        // Profile Provider End
+
+        // Projects Provider
         ChangeNotifierProvider(
           create: (_) => ProjectViewModel(),
         ),
+        // Projects Provider End
+
+        // Authentication Provider
+        ChangeNotifierProvider(
+          create: (_) => AuthViewModel(),
+        ),
+        // Authentication Provider End
       ],
       child: const PortfolioApp(),
     ),
