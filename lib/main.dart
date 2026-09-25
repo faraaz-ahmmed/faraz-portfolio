@@ -2,15 +2,25 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'viewmodels/profile_viewmodel.dart';
+import 'viewmodels/project_viewmodel.dart';
 import 'views/home_screen.dart';
 
 // App Entry Section
 void main() {
   runApp(
-    ChangeNotifierProvider(
-      create: (_) => ProfileViewModel(),
+    // Providers Section
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(
+          create: (_) => ProfileViewModel(),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => ProjectViewModel(),
+        ),
+      ],
       child: const PortfolioApp(),
     ),
+    // Providers End
   );
 }
 // App Entry End
@@ -29,11 +39,11 @@ class PortfolioApp extends StatelessWidget {
       theme: ThemeData(
         useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xff087cff),
+          seedColor: const Color(0xff036ffc),
         ),
-        scaffoldBackgroundColor: const Color(0xfff5f8ff),
+        scaffoldBackgroundColor: const Color(0xffedf3fc),
         appBarTheme: const AppBarTheme(
-          backgroundColor: Colors.white,
+          backgroundColor: Color(0xffedf3fc),
           surfaceTintColor: Colors.transparent,
           centerTitle: false,
         ),
