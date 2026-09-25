@@ -1,14 +1,24 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:provider/provider.dart';
 
+import 'firebase_options.dart';
 import 'viewmodels/profile_viewmodel.dart';
 import 'viewmodels/project_viewmodel.dart';
 import 'views/home_screen.dart';
 
 // App Entry Section
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Firebase Setup Section
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+  // Firebase Setup End
+
+  // Providers Section
   runApp(
-    // Providers Section
     MultiProvider(
       providers: [
         ChangeNotifierProvider(
@@ -20,8 +30,8 @@ void main() {
       ],
       child: const PortfolioApp(),
     ),
-    // Providers End
   );
+  // Providers End
 }
 // App Entry End
 
