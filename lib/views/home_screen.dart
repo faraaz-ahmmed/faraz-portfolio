@@ -5,20 +5,61 @@ import '../viewmodels/profile_viewmodel.dart';
 import '../widgets/portfolio_drawer.dart';
 
 // Home Screen
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  // Section Keys
+  final homeKey = GlobalKey();
+  final aboutKey = GlobalKey();
+  final skillsKey = GlobalKey();
+  // Section Keys End
+
+  // Menu Navigation Section
+  void openSection(String section) {
+    final sections = {
+      'Home': homeKey,
+      'About Me': aboutKey,
+      'Skills': skillsKey,
+    };
+
+    final target = sections[section]?.currentContext;
+
+    if (target != null) {
+      Scrollable.ensureVisible(
+        target,
+        duration: const Duration(milliseconds: 450),
+        curve: Curves.easeInOut,
+        alignment: 0,
+      );
+      return;
+    }
+
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text('$section will be added in the next steps.'),
+        ),
+      );
+  }
+  // Menu Navigation End
 
   @override
   Widget build(BuildContext context) {
     final profile = context.watch<ProfileViewModel>().profile;
 
-    // Brand Image Section
-    final brandImage = Container(
+    // Profile Photo Section
+    final profilePhoto = Container(
       padding: const EdgeInsets.all(8),
-      decoration: BoxDecoration(
-        color: const Color(0xffedf3fc),
-        borderRadius: BorderRadius.circular(32),
-        boxShadow: const [
+      decoration: const BoxDecoration(
+        color: Color(0xffedf3fc),
+        shape: BoxShape.circle,
+        boxShadow: [
           BoxShadow(
             color: Colors.white,
             offset: Offset(-6, -6),
@@ -31,18 +72,17 @@ class HomeScreen extends StatelessWidget {
           ),
         ],
       ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(24),
+      child: ClipOval(
         child: Image.asset(
           'assets/images/profile.png',
-          width: 140,
-          height: 140,
+          width: 180,
+          height: 180,
           fit: BoxFit.cover,
-          alignment: Alignment.topCenter,
+          alignment: Alignment.center,
         ),
       ),
     );
-    // Brand Image End
+    // Profile Photo End
 
     // Introduction Section
     final introduction = Column(
@@ -63,7 +103,7 @@ class HomeScreen extends StatelessWidget {
           style: const TextStyle(
             fontSize: 38,
             fontWeight: FontWeight.w800,
-            color: Color(0xff192c49),
+            color: Color(0xff141421),
           ),
         ),
         const SizedBox(height: 10),
@@ -72,7 +112,7 @@ class HomeScreen extends StatelessWidget {
           style: const TextStyle(
             fontSize: 23,
             fontWeight: FontWeight.w600,
-            color: Color(0xff087cff),
+            color: Color(0xff036ffc),
           ),
         ),
         const SizedBox(height: 18),
@@ -114,7 +154,7 @@ class HomeScreen extends StatelessWidget {
                 style: const TextStyle(
                   fontSize: 21,
                   fontWeight: FontWeight.bold,
-                  color: Color(0xff192c49),
+                  color: Color(0xff142158),
                 ),
               ),
             ),
@@ -122,6 +162,10 @@ class HomeScreen extends StatelessWidget {
         ),
       ),
       // App Bar End
+
+      // Navigation Menu Section
+      endDrawer: PortfolioDrawer(onSelected: openSection),
+      // Navigation Menu End
 
       // Page Content Section
       body: SafeArea(
@@ -137,6 +181,7 @@ class HomeScreen extends StatelessWidget {
 
                   // Hero Section
                   _RaisedCard(
+                    key: homeKey,
                     child: LayoutBuilder(
                       builder: (context, constraints) {
                         // Mobile Layout Section
@@ -144,7 +189,7 @@ class HomeScreen extends StatelessWidget {
                           return Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Center(child: brandImage),
+                              Center(child: profilePhoto),
                               const SizedBox(height: 32),
                               introduction,
                             ],
@@ -157,7 +202,7 @@ class HomeScreen extends StatelessWidget {
                           children: [
                             Expanded(child: introduction),
                             const SizedBox(width: 32),
-                            brandImage,
+                            profilePhoto,
                           ],
                         );
                         // Wide Screen Layout End
@@ -170,6 +215,7 @@ class HomeScreen extends StatelessWidget {
 
                   // About Section
                   _RaisedCard(
+                    key: aboutKey,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -195,6 +241,7 @@ class HomeScreen extends StatelessWidget {
 
                   // Skills Section
                   _RaisedCard(
+                    key: skillsKey,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -232,7 +279,7 @@ class HomeScreen extends StatelessWidget {
                                 child: Text(
                                   skill,
                                   style: const TextStyle(
-                                    color: Color(0xff195aab),
+                                    color: Color(0xff142158),
                                     fontWeight: FontWeight.w600,
                                   ),
                                 ),
@@ -271,7 +318,10 @@ class HomeScreen extends StatelessWidget {
 class _RaisedCard extends StatelessWidget {
   final Widget child;
 
-  const _RaisedCard({required this.child});
+  const _RaisedCard({
+    super.key,
+    required this.child,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -314,7 +364,11 @@ class _SectionTitle extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Icon(icon, color: const Color(0xff087cff), size: 28),
+        Icon(
+          icon,
+          color: const Color(0xff036ffc),
+          size: 28,
+        ),
         const SizedBox(width: 12),
         Expanded(
           child: Text(
@@ -322,7 +376,7 @@ class _SectionTitle extends StatelessWidget {
             style: const TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.bold,
-              color: Color(0xff192c49),
+              color: Color(0xff142158),
             ),
           ),
         ),
