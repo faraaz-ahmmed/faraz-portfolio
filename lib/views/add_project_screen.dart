@@ -5,9 +5,14 @@ import '../models/project_model.dart';
 import '../viewmodels/auth_viewmodel.dart';
 import '../viewmodels/project_viewmodel.dart';
 
-// Add Project Screen
+// Project Form Screen
 class AddProjectScreen extends StatefulWidget {
-  const AddProjectScreen({super.key});
+  final ProjectModel? project;
+
+  const AddProjectScreen({
+    super.key,
+    this.project,
+  });
 
   @override
   State<AddProjectScreen> createState() => _AddProjectScreenState();
@@ -25,23 +30,40 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
   final _technologies = TextEditingController();
 
   bool _isPublished = true;
+  String? _error;
+
+  bool get _isEditing => widget.project != null;
   // Form State End
+
+  // Load Existing Project Section
+  @override
+  void initState() {
+    super.initState();
+
+    final project = widget.project;
+    if (project == null) return;
+
+    _title.text = project.title;
+    _description.text = project.description;
+    _imageUrl.text = project.imageUrl;
+    _githubUrl.text = project.githubUrl;
+    _demoUrl.text = project.demoUrl;
+    _technologies.text = project.technologies.join(', ');
+    _isPublished = project.isPublished;
+  }
+  // Load Existing Project End
 
   // Save Project Section
   Future<void> _saveProject() async {
     if (!_formKey.currentState!.validate()) return;
 
-    if (!context.read<AuthViewModel>().isAdmin) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please log in as admin.')),
-      );
-      return;
-    }
+    if (!context.read<AuthViewModel>().isAdmin) return;
 
     FocusScope.of(context).unfocus();
+    setState(() => _error = null);
 
     final project = ProjectModel(
-      id: '',
+      id: widget.project?.id ?? '',
       title: _title.text.trim(),
       description: _description.text.trim(),
       imageUrl: _imageUrl.text.trim(),
@@ -56,13 +78,17 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
       isPublished: _isPublished,
     );
 
-    final saved =
-        await context.read<ProjectViewModel>().saveProject(project);
+    final viewModel = context.read<ProjectViewModel>();
+    final saved = await viewModel.saveProject(project);
 
     if (!mounted) return;
 
     if (saved) {
       Navigator.pop(context, true);
+    } else {
+      setState(() {
+        _error = viewModel.error ?? 'Unable to save project.';
+      });
     }
   }
   // Save Project End
@@ -84,7 +110,7 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
   }
   // URL Validation End
 
-  // Controllers Cleanup Section
+  // Cleanup Section
   @override
   void dispose() {
     _title.dispose();
@@ -95,11 +121,11 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
     _technologies.dispose();
     super.dispose();
   }
-  // Controllers Cleanup End
+  // Cleanup End
 
   @override
   Widget build(BuildContext context) {
-    final viewModel = context.watch<ProjectViewModel>();
+    final isSaving = context.watch<ProjectViewModel>().isSaving;
     final isAdmin = context.watch<AuthViewModel>().isAdmin;
 
     return Scaffold(
@@ -107,15 +133,13 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
 
       // App Bar Section
       appBar: AppBar(
-        title: const Text('Add Project'),
+        title: Text(_isEditing ? 'Edit Project' : 'Add Project'),
       ),
       // App Bar End
 
-      // Project Form Section
+      // Form Section
       body: !isAdmin
-          ? const Center(
-              child: Text('Please log in as admin to add projects.'),
-            )
+          ? const Center(child: Text('Please log in as admin.'))
           : SafeArea(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.all(24),
@@ -144,16 +168,21 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          // Project Details Section
-                          const Text(
-                            'Showcase Your Work',
-                            style: TextStyle(
+                          // Heading Section
+                          Text(
+                            _isEditing
+                                ? 'Update Your Project'
+                                : 'Showcase Your Work',
+                            style: const TextStyle(
                               fontSize: 26,
                               fontWeight: FontWeight.bold,
                               color: Color(0xff142158),
                             ),
                           ),
                           const SizedBox(height: 24),
+                          // Heading End
+
+                          // Project Details Section
                           _field(
                             controller: _title,
                             label: 'Project name',
@@ -197,43 +226,44 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
                           SwitchListTile(
                             contentPadding: EdgeInsets.zero,
                             title: const Text('Publish project'),
-                            subtitle: const Text(
-                              'Show this project on your public portfolio.',
+                            subtitle: Text(
+                              _isPublished
+                                  ? 'Visible on your public portfolio.'
+                                  : 'Hidden from visitors.',
                             ),
                             value: _isPublished,
-                            onChanged: viewModel.isSaving
+                            onChanged: isSaving
                                 ? null
                                 : (value) {
-                                    setState(() {
-                                      _isPublished = value;
-                                    });
+                                    setState(() => _isPublished = value);
                                   },
                           ),
                           // Publish End
 
-                          const SizedBox(height: 16),
-
                           // Error Section
-                          if (viewModel.error != null) ...[
+                          if (_error != null) ...[
+                            const SizedBox(height: 16),
                             Text(
-                              viewModel.error!,
+                              _error!,
                               style: TextStyle(
                                 color: Theme.of(context).colorScheme.error,
                               ),
                             ),
-                            const SizedBox(height: 16),
                           ],
                           // Error End
 
+                          const SizedBox(height: 20),
+
                           // Save Button Section
                           FilledButton.icon(
-                            onPressed:
-                                viewModel.isSaving ? null : _saveProject,
+                            onPressed: isSaving ? null : _saveProject,
                             icon: const Icon(Icons.save_outlined),
                             label: Text(
-                              viewModel.isSaving
+                              isSaving
                                   ? 'Saving...'
-                                  : 'Save Project',
+                                  : _isEditing
+                                      ? 'Save Changes'
+                                      : 'Save Project',
                             ),
                             style: FilledButton.styleFrom(
                               backgroundColor: const Color(0xff036ffc),
@@ -251,7 +281,7 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
                 ),
               ),
             ),
-      // Project Form End
+      // Form End
     );
   }
 
@@ -297,4 +327,4 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
   }
   // Reusable Input End
 }
-// Add Project Screen End
+// Project Form Screen End

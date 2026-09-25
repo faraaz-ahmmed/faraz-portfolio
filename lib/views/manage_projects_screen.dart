@@ -18,19 +18,17 @@ class ManageProjectsScreen extends StatelessWidget {
     if (!isAdmin) {
       return Scaffold(
         appBar: AppBar(title: const Text('Manage Projects')),
-        body: const Center(
-          child: Text('Please log in as admin.'),
-        ),
+        body: const Center(child: Text('Please log in as admin.')),
       );
     }
     // Admin Access End
 
-    // Admin Projects Provider Section
+    // Admin Provider Section
     return ChangeNotifierProvider(
       create: (_) => AdminProjectsViewModel(),
       child: const _ManageProjectsContent(),
     );
-    // Admin Projects Provider End
+    // Admin Provider End
   }
 }
 // Manage Projects Screen End
@@ -39,24 +37,31 @@ class ManageProjectsScreen extends StatelessWidget {
 class _ManageProjectsContent extends StatelessWidget {
   const _ManageProjectsContent();
 
-  // Add Project Section
-  Future<void> _addProject(BuildContext context) async {
+  // Open Project Form Section
+  Future<void> _openForm(
+    BuildContext context, {
+    ProjectModel? project,
+  }) async {
     final saved = await Navigator.push<bool>(
       context,
       MaterialPageRoute(
-        builder: (_) => const AddProjectScreen(),
+        builder: (_) => AddProjectScreen(project: project),
       ),
     );
 
     if (!context.mounted || saved != true) return;
 
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Project saved successfully.')),
+      SnackBar(
+        content: Text(
+          project == null ? 'Project added.' : 'Project updated.',
+        ),
+      ),
     );
   }
-  // Add Project End
+  // Open Project Form End
 
-  // Delete Confirmation Section
+  // Delete Project Section
   Future<void> _deleteProject(
     BuildContext context,
     ProjectModel project,
@@ -87,7 +92,6 @@ class _ManageProjectsContent extends StatelessWidget {
     );
 
     if (!context.mounted || confirmed != true) return;
-
     if (!context.read<AuthViewModel>().isAdmin) return;
 
     final viewModel = context.read<AdminProjectsViewModel>();
@@ -105,7 +109,7 @@ class _ManageProjectsContent extends StatelessWidget {
       ),
     );
   }
-  // Delete Confirmation End
+  // Delete Project End
 
   @override
   Widget build(BuildContext context) {
@@ -115,15 +119,13 @@ class _ManageProjectsContent extends StatelessWidget {
       backgroundColor: const Color(0xffedf3fc),
 
       // App Bar Section
-      appBar: AppBar(
-        title: const Text('Manage Projects'),
-      ),
+      appBar: AppBar(title: const Text('Manage Projects')),
       // App Bar End
 
       // Add Button Section
       floatingActionButton: FloatingActionButton.extended(
         onPressed:
-            viewModel.isDeleting ? null : () => _addProject(context),
+            viewModel.isDeleting ? null : () => _openForm(context),
         backgroundColor: const Color(0xff036ffc),
         foregroundColor: Colors.white,
         icon: const Icon(Icons.add),
@@ -131,7 +133,7 @@ class _ManageProjectsContent extends StatelessWidget {
       ),
       // Add Button End
 
-      // Projects Content Section
+      // Main Content Section
       body: SafeArea(
         child: Center(
           child: ConstrainedBox(
@@ -140,11 +142,11 @@ class _ManageProjectsContent extends StatelessWidget {
           ),
         ),
       ),
-      // Projects Content End
+      // Main Content End
     );
   }
 
-  // Projects List Section
+  // Projects Content Section
   Widget _buildContent(
     BuildContext context,
     AdminProjectsViewModel viewModel,
@@ -175,9 +177,12 @@ class _ManageProjectsContent extends StatelessWidget {
     // Empty State Section
     if (viewModel.projects.isEmpty) {
       return const Center(
-        child: Text(
-          'No projects yet. Tap Add Project to start.',
-          textAlign: TextAlign.center,
+        child: Padding(
+          padding: EdgeInsets.all(24),
+          child: Text(
+            'No projects yet. Tap Add Project to start.',
+            textAlign: TextAlign.center,
+          ),
         ),
       );
     }
@@ -213,7 +218,7 @@ class _ManageProjectsContent extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Project Title Section
+              // Project Details Section
               Text(
                 project.title,
                 style: const TextStyle(
@@ -232,13 +237,13 @@ class _ManageProjectsContent extends StatelessWidget {
                   height: 1.6,
                 ),
               ),
-              // Project Title End
+              // Project Details End
 
               const SizedBox(height: 16),
 
-              // Status And Delete Section
+              // Project Actions Section
               Wrap(
-                spacing: 16,
+                spacing: 12,
                 runSpacing: 8,
                 crossAxisAlignment: WrapCrossAlignment.center,
                 children: [
@@ -256,6 +261,13 @@ class _ManageProjectsContent extends StatelessWidget {
                   TextButton.icon(
                     onPressed: viewModel.isDeleting
                         ? null
+                        : () => _openForm(context, project: project),
+                    icon: const Icon(Icons.edit_outlined),
+                    label: const Text('Edit'),
+                  ),
+                  TextButton.icon(
+                    onPressed: viewModel.isDeleting
+                        ? null
                         : () => _deleteProject(context, project),
                     icon: const Icon(Icons.delete_outline),
                     label: const Text('Delete'),
@@ -265,7 +277,7 @@ class _ManageProjectsContent extends StatelessWidget {
                   ),
                 ],
               ),
-              // Status And Delete End
+              // Project Actions End
             ],
           ),
         );
@@ -273,6 +285,6 @@ class _ManageProjectsContent extends StatelessWidget {
     );
     // Project Cards End
   }
-  // Projects List End
+  // Projects Content End
 }
 // Manage Projects Content End

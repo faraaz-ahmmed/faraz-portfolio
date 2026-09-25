@@ -1,11 +1,47 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../viewmodels/project_viewmodel.dart';
 
 // Projects Section
 class ProjectsSection extends StatelessWidget {
   const ProjectsSection({super.key});
+
+  // Open Project Link Section
+  Future<void> _openLink(BuildContext context, String link) async {
+    final uri = Uri.tryParse(link.trim());
+
+    if (uri == null ||
+        uri.host.isEmpty ||
+        (uri.scheme != 'https' && uri.scheme != 'http')) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('This link is invalid.')),
+      );
+      return;
+    }
+
+    try {
+      final opened = await launchUrl(
+        uri,
+        mode: LaunchMode.externalApplication,
+        webOnlyWindowName: '_blank',
+      );
+
+      if (!opened && context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Unable to open this link.')),
+        );
+      }
+    } catch (_) {
+      if (!context.mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Unable to open this link.')),
+      );
+    }
+  }
+  // Open Project Link End
 
   @override
   Widget build(BuildContext context) {
@@ -120,7 +156,7 @@ class ProjectsSection extends StatelessWidget {
                             borderRadius: BorderRadius.circular(16),
                             child: AspectRatio(
                               aspectRatio: 16 / 10,
-                              child: project.imageUrl.isEmpty
+                              child: project.imageUrl.trim().isEmpty
                                   ? const _ImagePlaceholder()
                                   : Image.network(
                                       project.imageUrl,
@@ -193,6 +229,42 @@ class ProjectsSection extends StatelessWidget {
                             ),
                           ],
                           // Technologies End
+
+                          // Project Links Section
+                          if (project.githubUrl.trim().isNotEmpty ||
+                              project.demoUrl.trim().isNotEmpty) ...[
+                            const SizedBox(height: 18),
+                            Wrap(
+                              spacing: 10,
+                              runSpacing: 10,
+                              children: [
+                                if (project.githubUrl.trim().isNotEmpty)
+                                  OutlinedButton.icon(
+                                    onPressed: () => _openLink(
+                                      context,
+                                      project.githubUrl,
+                                    ),
+                                    icon: const Icon(Icons.code),
+                                    label: const Text('GitHub'),
+                                  ),
+                                if (project.demoUrl.trim().isNotEmpty)
+                                  FilledButton.icon(
+                                    onPressed: () => _openLink(
+                                      context,
+                                      project.demoUrl,
+                                    ),
+                                    icon: const Icon(Icons.open_in_new),
+                                    label: const Text('Live Demo'),
+                                    style: FilledButton.styleFrom(
+                                      backgroundColor:
+                                          const Color(0xff036ffc),
+                                      foregroundColor: Colors.white,
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ],
+                          // Project Links End
                         ],
                       ),
                     ),

@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
+import '../viewmodels/auth_viewmodel.dart';
 import '../views/admin_login_screen.dart';
+import '../views/manage_projects_screen.dart';
 
 // Portfolio Menu
 class PortfolioDrawer extends StatelessWidget {
@@ -13,15 +16,20 @@ class PortfolioDrawer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const items = {
+    final isAdmin = context.watch<AuthViewModel>().isAdmin;
+
+    // Menu Options Section
+    final items = {
       'Home': Icons.home_outlined,
       'About Me': Icons.person_outline,
       'Skills': Icons.code,
       'Projects': Icons.work_outline,
       'Download CV': Icons.download_outlined,
       'Contact Me': Icons.mail_outline,
-      'Admin Login': Icons.lock_outline,
+      if (isAdmin) 'Manage Projects': Icons.folder_outlined,
+      isAdmin ? 'Admin Dashboard' : 'Admin Login': Icons.lock_outline,
     };
+    // Menu Options End
 
     return Drawer(
       backgroundColor: const Color(0xffedf3fc),
@@ -56,7 +64,14 @@ class PortfolioDrawer extends StatelessWidget {
                   final navigator = Navigator.of(context);
                   navigator.pop();
 
-                  if (item.key == 'Admin Login') {
+                  if (item.key == 'Manage Projects') {
+                    navigator.push(
+                      MaterialPageRoute(
+                        builder: (_) => const ManageProjectsScreen(),
+                      ),
+                    );
+                  } else if (item.key == 'Admin Login' ||
+                      item.key == 'Admin Dashboard') {
                     navigator.push(
                       MaterialPageRoute(
                         builder: (_) => const AdminLoginScreen(),
