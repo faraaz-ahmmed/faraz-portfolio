@@ -9,7 +9,8 @@ class ProjectsSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final projects = context.watch<ProjectViewModel>().publishedProjects;
+    final viewModel = context.watch<ProjectViewModel>();
+    final projects = viewModel.publishedProjects;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -39,9 +40,41 @@ class ProjectsSection extends StatelessWidget {
 
         const SizedBox(height: 24),
 
+        // Loading Section
+        if (viewModel.isLoading)
+          const Center(
+            child: Padding(
+              padding: EdgeInsets.all(24),
+              child: CircularProgressIndicator(),
+            ),
+          )
+        // Loading End
+
+        // Error Section
+        else if (viewModel.error != null)
+          Text(
+            viewModel.error!,
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.error,
+            ),
+          )
+        // Error End
+
+        // Empty Projects Section
+        else if (projects.isEmpty)
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 24),
+            child: Text(
+              'No projects published yet.',
+              style: TextStyle(
+                fontSize: 16,
+                color: Color(0xff52647e),
+              ),
+            ),
+          )
+        // Empty Projects End
+
         // Project Cards Section
-        if (projects.isEmpty)
-          const Text('No projects published yet.')
         else
           LayoutBuilder(
             builder: (context, constraints) {
@@ -92,6 +125,22 @@ class ProjectsSection extends StatelessWidget {
                                   : Image.network(
                                       project.imageUrl,
                                       fit: BoxFit.cover,
+                                      loadingBuilder: (
+                                        context,
+                                        child,
+                                        progress,
+                                      ) {
+                                        if (progress == null) return child;
+
+                                        return const ColoredBox(
+                                          color: Color(0xffe0ecff),
+                                          child: Center(
+                                            child: CircularProgressIndicator(
+                                              strokeWidth: 2,
+                                            ),
+                                          ),
+                                        );
+                                      },
                                       errorBuilder: (_, __, ___) {
                                         return const _ImagePlaceholder();
                                       },
@@ -122,24 +171,27 @@ class ProjectsSection extends StatelessWidget {
                           ),
                           // Project Details End
 
-                          const SizedBox(height: 16),
-
                           // Technologies Section
-                          Wrap(
-                            spacing: 8,
-                            runSpacing: 8,
-                            children: [
-                              for (final technology in project.technologies)
-                                Chip(
-                                  label: Text(technology),
-                                  backgroundColor: const Color(0xffe0ecff),
-                                  side: BorderSide.none,
-                                  labelStyle: const TextStyle(
-                                    color: Color(0xff142158),
+                          if (project.technologies.isNotEmpty) ...[
+                            const SizedBox(height: 16),
+                            Wrap(
+                              spacing: 8,
+                              runSpacing: 8,
+                              children: [
+                                for (final technology
+                                    in project.technologies)
+                                  Chip(
+                                    label: Text(technology),
+                                    backgroundColor:
+                                        const Color(0xffe0ecff),
+                                    side: BorderSide.none,
+                                    labelStyle: const TextStyle(
+                                      color: Color(0xff142158),
+                                    ),
                                   ),
-                                ),
-                            ],
-                          ),
+                              ],
+                            ),
+                          ],
                           // Technologies End
                         ],
                       ),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../viewmodels/auth_viewmodel.dart';
+import 'add_project_screen.dart';
 
 // Admin Login Screen
 class AdminLoginScreen extends StatefulWidget {
@@ -14,39 +15,58 @@ class AdminLoginScreen extends StatefulWidget {
 class _AdminLoginScreenState extends State<AdminLoginScreen> {
   // Form State Section
   final _formKey = GlobalKey<FormState>();
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
+  final _email = TextEditingController();
+  final _password = TextEditingController();
 
   bool _hidePassword = true;
   // Form State End
 
-  // Login Action Section
+  // Login Section
   Future<void> _login() async {
     if (!_formKey.currentState!.validate()) return;
 
     FocusScope.of(context).unfocus();
 
     final success = await context.read<AuthViewModel>().login(
-          _emailController.text,
-          _passwordController.text,
+          _email.text,
+          _password.text,
         );
 
     if (!mounted) return;
 
     if (success) {
-      _passwordController.clear();
+      _password.clear();
     }
   }
-  // Login Action End
+  // Login End
 
-  // Controllers Cleanup Section
+  // Open Add Project Section
+  Future<void> _openAddProject() async {
+    final saved = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const AddProjectScreen(),
+      ),
+    );
+
+    if (!mounted || saved != true) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Project saved successfully.'),
+      ),
+    );
+  }
+  // Open Add Project End
+
+  // Cleanup Section
   @override
   void dispose() {
-    _emailController.dispose();
-    _passwordController.dispose();
+    _email.dispose();
+    _password.dispose();
     super.dispose();
   }
-  // Controllers Cleanup End
+  // Cleanup End
 
   @override
   Widget build(BuildContext context) {
@@ -57,11 +77,13 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
 
       // App Bar Section
       appBar: AppBar(
-        title: const Text('Admin Login'),
+        title: Text(
+          auth.isAdmin ? 'Admin Dashboard' : 'Admin Login',
+        ),
       ),
       // App Bar End
 
-      // Login Card Section
+      // Main Card Section
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -113,7 +135,7 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
                   const SizedBox(height: 10),
                   Text(
                     auth.isAdmin
-                        ? 'You are signed in as the admin.'
+                        ? 'Add your work to your portfolio.'
                         : 'Sign in to manage your portfolio.',
                     textAlign: TextAlign.center,
                     style: const TextStyle(
@@ -123,6 +145,36 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
                   ),
                   const SizedBox(height: 28),
                   // Header End
+
+                  // Admin Actions Section
+                  if (auth.isAdmin) ...[
+                    FilledButton.icon(
+                      onPressed:
+                          auth.isLoading ? null : _openAddProject,
+                      icon: const Icon(Icons.add),
+                      label: const Text('Add Project'),
+                      style: FilledButton.styleFrom(
+                        backgroundColor: const Color(0xff036ffc),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 18,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    OutlinedButton.icon(
+                      onPressed: auth.isLoading
+                          ? null
+                          : () async {
+                              await context.read<AuthViewModel>().logout();
+                            },
+                      icon: const Icon(Icons.logout),
+                      label: Text(
+                        auth.isLoading ? 'Signing out...' : 'Logout',
+                      ),
+                    ),
+                  ],
+                  // Admin Actions End
 
                   // Login Form Section
                   if (!auth.isAdmin)
@@ -134,7 +186,7 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
                           children: [
                             // Email Section
                             TextFormField(
-                              controller: _emailController,
+                              controller: _email,
                               enabled: !auth.isLoading,
                               keyboardType: TextInputType.emailAddress,
                               textInputAction: TextInputAction.next,
@@ -160,7 +212,7 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
 
                             // Password Section
                             TextFormField(
-                              controller: _passwordController,
+                              controller: _password,
                               enabled: !auth.isLoading,
                               obscureText: _hidePassword,
                               autocorrect: false,
@@ -211,19 +263,10 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
                                 padding: const EdgeInsets.symmetric(
                                   vertical: 16,
                                 ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(14),
-                                ),
                               ),
-                              child: auth.isLoading
-                                  ? const SizedBox(
-                                      width: 22,
-                                      height: 22,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                      ),
-                                    )
-                                  : const Text('Login'),
+                              child: Text(
+                                auth.isLoading ? 'Signing in...' : 'Login',
+                              ),
                             ),
                             // Login Button End
                           ],
@@ -231,27 +274,6 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
                       ),
                     ),
                   // Login Form End
-
-                  // Logged In Section
-                  if (auth.isAdmin) ...[
-                    const Icon(
-                      Icons.verified_user_outlined,
-                      size: 56,
-                      color: Color(0xff036ffc),
-                    ),
-                    const SizedBox(height: 20),
-                    OutlinedButton(
-                      onPressed: auth.isLoading
-                          ? null
-                          : () async {
-                              await context.read<AuthViewModel>().logout();
-                            },
-                      child: Text(
-                        auth.isLoading ? 'Signing out...' : 'Logout',
-                      ),
-                    ),
-                  ],
-                  // Logged In End
 
                   // Error Section
                   if (auth.error != null) ...[
@@ -271,7 +293,7 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
           ),
         ),
       ),
-      // Login Card End
+      // Main Card End
     );
   }
 
