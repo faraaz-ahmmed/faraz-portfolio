@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../viewmodels/auth_viewmodel.dart';
 import '../views/admin_login_screen.dart';
+import '../views/edit_profile_screen.dart';
 import '../views/manage_projects_screen.dart';
 
 // Portfolio Menu
@@ -26,6 +27,7 @@ class PortfolioDrawer extends StatelessWidget {
       'Projects': Icons.work_outline,
       'Download CV': Icons.download_outlined,
       'Contact Me': Icons.mail_outline,
+      if (isAdmin) 'Edit Profile': Icons.manage_accounts_outlined,
       if (isAdmin) 'Manage Projects': Icons.folder_outlined,
       isAdmin ? 'Admin Dashboard' : 'Admin Login': Icons.lock_outline,
     };
@@ -60,26 +62,56 @@ class PortfolioDrawer extends StatelessWidget {
                 ),
                 title: Text(item.key),
                 trailing: const Icon(Icons.chevron_right),
-                onTap: () {
+                onTap: () async {
                   final navigator = Navigator.of(context);
+                  final messenger = ScaffoldMessenger.of(context);
+
                   navigator.pop();
 
-                  if (item.key == 'Manage Projects') {
+                  // Edit Profile Navigation
+                  if (item.key == 'Edit Profile') {
+                    final saved = await navigator.push<bool>(
+                      MaterialPageRoute(
+                        builder: (_) => const EditProfileScreen(),
+                      ),
+                    );
+
+                    if (saved == true && messenger.mounted) {
+                      messenger.showSnackBar(
+                        const SnackBar(
+                          content: Text('Profile saved successfully.'),
+                        ),
+                      );
+                    }
+                  }
+                  // Edit Profile Navigation End
+
+                  // Manage Projects Navigation
+                  else if (item.key == 'Manage Projects') {
                     navigator.push(
                       MaterialPageRoute(
                         builder: (_) => const ManageProjectsScreen(),
                       ),
                     );
-                  } else if (item.key == 'Admin Login' ||
+                  }
+                  // Manage Projects Navigation End
+
+                  // Admin Navigation
+                  else if (item.key == 'Admin Login' ||
                       item.key == 'Admin Dashboard') {
                     navigator.push(
                       MaterialPageRoute(
                         builder: (_) => const AdminLoginScreen(),
                       ),
                     );
-                  } else {
+                  }
+                  // Admin Navigation End
+
+                  // Public Sections Navigation
+                  else {
                     onSelected(item.key);
                   }
+                  // Public Sections Navigation End
                 },
               ),
             // Menu Items End
