@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../viewmodels/profile_viewmodel.dart';
+import '../widgets/portfolio_drawer.dart';
 
 // Home Screen
 class HomeScreen extends StatelessWidget {
