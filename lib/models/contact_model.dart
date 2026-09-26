@@ -1,25 +1,39 @@
 // Contact Model Section
 
 class ContactModel {
-  // Contact Fields Section
-
+  final String id;
   final String name;
   final String email;
   final String message;
-
-  // Contact Fields End
-
-  // Constructor Section
+  final DateTime? createdAt;
 
   const ContactModel({
+    this.id = '',
     required this.name,
     required this.email,
     required this.message,
+    this.createdAt,
   });
 
-  // Constructor End
+  // Read Message Section
 
-  // Firebase Data Section
+  factory ContactModel.fromMap(
+    String id,
+    Map<String, dynamic> data, {
+    DateTime? createdAt,
+  }) {
+    return ContactModel(
+      id: id,
+      name: data['name'] as String? ?? '',
+      email: data['email'] as String? ?? '',
+      message: data['message'] as String? ?? '',
+      createdAt: createdAt,
+    );
+  }
+
+  // Read Message End
+
+  // Save Message Section
 
   Map<String, dynamic> toMap() {
     return {
@@ -29,7 +43,7 @@ class ContactModel {
     };
   }
 
-  // Firebase Data End
+  // Save Message End
 }
 
 // Contact Model End
