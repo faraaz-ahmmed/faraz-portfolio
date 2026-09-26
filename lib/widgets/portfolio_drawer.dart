@@ -3,10 +3,12 @@ import 'package:provider/provider.dart';
 
 import '../viewmodels/auth_viewmodel.dart';
 import '../views/admin_login_screen.dart';
+import '../views/contact_screen.dart';
 import '../views/edit_profile_screen.dart';
 import '../views/manage_projects_screen.dart';
 
-// Portfolio Menu
+// Portfolio Menu Section
+
 class PortfolioDrawer extends StatelessWidget {
   final void Function(String section) onSelected;
 
@@ -27,7 +29,7 @@ class PortfolioDrawer extends StatelessWidget {
       'Projects': Icons.work_outline,
       'Download CV': Icons.download_outlined,
       'Contact Me': Icons.mail_outline,
-      if (isAdmin) 'Edit Profile': Icons.manage_accounts_outlined,
+      if (isAdmin) 'Edit Profile': Icons.edit_outlined,
       if (isAdmin) 'Manage Projects': Icons.folder_outlined,
       isAdmin ? 'Admin Dashboard' : 'Admin Login': Icons.lock_outline,
     };
@@ -68,8 +70,13 @@ class PortfolioDrawer extends StatelessWidget {
 
                   navigator.pop();
 
-                  // Edit Profile Navigation
-                  if (item.key == 'Edit Profile') {
+                  if (item.key == 'Contact Me') {
+                    navigator.push(
+                      MaterialPageRoute(
+                        builder: (_) => const ContactScreen(),
+                      ),
+                    );
+                  } else if (item.key == 'Edit Profile') {
                     final saved = await navigator.push<bool>(
                       MaterialPageRoute(
                         builder: (_) => const EditProfileScreen(),
@@ -79,39 +86,26 @@ class PortfolioDrawer extends StatelessWidget {
                     if (saved == true && messenger.mounted) {
                       messenger.showSnackBar(
                         const SnackBar(
-                          content: Text('Profile saved successfully.'),
+                          content: Text('Profile updated successfully.'),
                         ),
                       );
                     }
-                  }
-                  // Edit Profile Navigation End
-
-                  // Manage Projects Navigation
-                  else if (item.key == 'Manage Projects') {
+                  } else if (item.key == 'Manage Projects') {
                     navigator.push(
                       MaterialPageRoute(
                         builder: (_) => const ManageProjectsScreen(),
                       ),
                     );
-                  }
-                  // Manage Projects Navigation End
-
-                  // Admin Navigation
-                  else if (item.key == 'Admin Login' ||
+                  } else if (item.key == 'Admin Login' ||
                       item.key == 'Admin Dashboard') {
                     navigator.push(
                       MaterialPageRoute(
                         builder: (_) => const AdminLoginScreen(),
                       ),
                     );
-                  }
-                  // Admin Navigation End
-
-                  // Public Sections Navigation
-                  else {
+                  } else {
                     onSelected(item.key);
                   }
-                  // Public Sections Navigation End
                 },
               ),
             // Menu Items End
@@ -121,4 +115,5 @@ class PortfolioDrawer extends StatelessWidget {
     );
   }
 }
+
 // Portfolio Menu End
