@@ -1,1 +1,39 @@
-{"flutter":{"platforms":{"android":{"default":{"projectId":"faraz-portfolio-730dd","appId":"1:249530960513:android:2a2315beb445cad81d5b80","fileOutput":"android/app/google-services.json"}},"dart":{"lib/firebase_options.dart":{"projectId":"faraz-portfolio-730dd","configurations":{"android":"1:249530960513:android:2a2315beb445cad81d5b80","ios":"1:249530960513:ios:8690889cb81d25b11d5b80","macos":"1:249530960513:ios:8690889cb81d25b11d5b80","web":"1:249530960513:web:15e1cbb61753e2771d5b80","windows":"1:249530960513:web:eea9c2a5a376ed2a1d5b80"}}}}}}
+{
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "faraz-portfolio-730dd",
+          "appId": "1:249530960513:android:2a2315beb445cad81d5b80",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "faraz-portfolio-730dd",
+          "configurations": {
+            "android": "1:249530960513:android:2a2315beb445cad81d5b80",
+            "ios": "1:249530960513:ios:8690889cb81d25b11d5b80",
+            "macos": "1:249530960513:ios:8690889cb81d25b11d5b80",
+            "web": "1:249530960513:web:15e1cbb61753e2771d5b80",
+            "windows": "1:249530960513:web:eea9c2a5a376ed2a1d5b80"
+          }
+        }
+      }
+    }
+  },
+  "hosting": {
+    "public": "build/web",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "rewrites": [
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
+    ]
+  }
+}
