@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../viewmodels/auth_viewmodel.dart';
+import '../views/admin_inbox_screen.dart';
 import '../views/admin_login_screen.dart';
 import '../views/contact_screen.dart';
 import '../views/edit_profile_screen.dart';
@@ -31,6 +32,7 @@ class PortfolioDrawer extends StatelessWidget {
       'Contact Me': Icons.mail_outline,
       if (isAdmin) 'Edit Profile': Icons.edit_outlined,
       if (isAdmin) 'Manage Projects': Icons.folder_outlined,
+      if (isAdmin) 'Admin Inbox': Icons.inbox_outlined,
       isAdmin ? 'Admin Dashboard' : 'Admin Login': Icons.lock_outline,
     };
     // Menu Options End
@@ -74,6 +76,12 @@ class PortfolioDrawer extends StatelessWidget {
                     navigator.push(
                       MaterialPageRoute(
                         builder: (_) => const ContactScreen(),
+                      ),
+                    );
+                  } else if (item.key == 'Admin Inbox') {
+                    navigator.push(
+                      MaterialPageRoute(
+                        builder: (_) => const AdminInboxScreen(),
                       ),
                     );
                   } else if (item.key == 'Edit Profile') {
