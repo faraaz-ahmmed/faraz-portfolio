@@ -21,7 +21,11 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
   final _technologies = TextEditingController();
   final _github = TextEditingController();
   final _demo = TextEditingController();
-  final _imageLink = TextEditingController();
+  final _imageLinks = List.generate(10, (_) => TextEditingController());
+  List<String> get _images => _imageLinks
+      .map((field) => field.text.trim())
+      .where((url) => url.isNotEmpty)
+      .toList();
   bool _published = true;
   bool _busy = false;
   String? _error;
@@ -41,7 +45,9 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
     _demo.text = project.demoUrl;
     _published = project.isPublished;
     final images = project.galleryImages;
-    _imageLink.text = images.isEmpty ? '' : images.first;
+    for (var i = 0; i < images.length && i < 10; i++) {
+      _imageLinks[i].text = images[i];
+    }
   }
 
   // Load Project End
@@ -49,6 +55,10 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
   // Save Project Section
   Future<void> _save() async {
     if (_busy || !_formKey.currentState!.validate()) return;
+    if (_images.toSet().length != _images.length) {
+      setState(() => _error = 'Use a different image link in each field.');
+      return;
+    }
     if (!context.read<AuthViewModel>().isAdmin) {
       setState(() => _error = 'Please sign in as admin.');
       return;
@@ -61,12 +71,13 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
       _error = null;
     });
     try {
+      final images = _images;
       final project = ProjectModel(
         id: widget.project?.id ?? '',
         title: _title.text.trim(),
         description: _description.text.trim(),
-        imageUrl: _imageLink.text.trim(),
-        imageUrls: const [],
+        imageUrl: images.isEmpty ? '' : images.first,
+        imageUrls: images.skip(1).toList(),
         githubUrl: _github.text.trim(),
         demoUrl: _demo.text.trim(),
         technologies: _technologies.text
@@ -109,7 +120,9 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
     _technologies.dispose();
     _github.dispose();
     _demo.dispose();
-    _imageLink.dispose();
+    for (final field in _imageLinks) {
+      field.dispose();
+    }
     super.dispose();
   }
 
@@ -173,55 +186,49 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
             _field(_technologies, 'Technologies separated by commas'),
             _field(_github, 'GitHub URL (optional)', link: true),
             _field(_demo, 'Live Demo URL (optional)', link: true),
-            _field(_imageLink, 'App Image', link: true),
-            // Project Information End
-            // Image Preview Section
-            ValueListenableBuilder<TextEditingValue>(
-              valueListenable: _imageLink,
-              builder: (context, value, child) {
-                final url = value.text.trim();
-                final uri = Uri.tryParse(url);
-                final valid = uri != null &&
-                    ['http', 'https'].contains(uri.scheme) &&
-                    uri.host.isNotEmpty;
-                return ClipRRect(
-                  borderRadius: BorderRadius.circular(18),
-                  child: AspectRatio(
-                    aspectRatio: 16 / 10,
-                    child: ColoredBox(
-                      color: const Color(0xffe0ebfc),
-                      child: !valid
-                          ? const Center(
-                              child: Icon(Icons.image_outlined,
-                                  size: 60, color: Color(0xff036ffc)),
-                            )
-                          : Image.network(
-                              url,
-                              key: ValueKey(url),
-                              fit: BoxFit.contain,
-                              loadingBuilder: (context, child, progress) {
-                                if (progress == null) return child;
-                                return const Center(
-                                  child: CircularProgressIndicator(),
-                                );
-                              },
-                              errorBuilder: (_, __, ___) => const Center(
-                                child: Padding(
-                                  padding: EdgeInsets.all(16),
-                                  child: Text(
-                                    'Image could not load. Check the direct image URL.',
-                                    textAlign: TextAlign.center,
-                                  ),
-                                ),
-                              ),
-                            ),
+            // App Images Section
+            const Text('Add up to 10 images. The first filled link is the cover.'),
+            const SizedBox(height: 16),
+            for (var i = 0; i < _imageLinks.length; i++) ...[
+              _field(_imageLinks[i], 'App Image ${i + 1} (optional)', link: true),
+              ValueListenableBuilder<TextEditingValue>(
+                valueListenable: _imageLinks[i],
+                builder: (context, value, child) {
+                  final url = value.text.trim();
+                  final uri = Uri.tryParse(url);
+                  if (uri == null ||
+                      !['http', 'https'].contains(uri.scheme) ||
+                      uri.host.isEmpty) {
+                    return const SizedBox.shrink();
+                  }
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 18),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(14),
+                      child: Image.network(
+                        url,
+                        key: ValueKey(url),
+                        height: 160,
+                        width: double.infinity,
+                        fit: BoxFit.contain,
+                        loadingBuilder: (context, child, progress) {
+                          if (progress == null) return child;
+                          return const SizedBox(
+                            height: 160,
+                            child: Center(child: CircularProgressIndicator()),
+                          );
+                        },
+                        errorBuilder: (_, __, ___) => const Padding(
+                          padding: EdgeInsets.all(12),
+                          child: Text('Image could not load. Check the direct image URL.'),
+                        ),
+                      ),
                     ),
-                  ),
-                );
-              },
-            ),
-            const SizedBox(height: 20),
-            // Image Preview End
+                  );
+                },
+              ),
+            ],
+            // App Images End
             // Publish Section
             SwitchListTile(
               contentPadding: EdgeInsets.zero,
