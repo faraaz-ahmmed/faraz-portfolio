@@ -249,7 +249,7 @@ class _ProjectDetailsDialogState extends State<ProjectDetailsDialog> {
         if (images.isNotEmpty) ...[
           const SizedBox(height: 24),
           const Text(
-            'Screenshots',
+            'App images',
             style: TextStyle(
               fontSize: 21,
               fontWeight: FontWeight.bold,

@@ -1,19 +1,11 @@
-import 'dart:typed_data';
-
-import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-
 import '../models/project_model.dart';
-import '../services/upload_service.dart';
 import '../viewmodels/auth_viewmodel.dart';
 import '../viewmodels/project_viewmodel.dart';
-
 // Add And Edit Project Section
-
 class AddProjectScreen extends StatefulWidget {
   final ProjectModel? project;
-
   const AddProjectScreen({
     super.key,
     this.project,
@@ -22,24 +14,17 @@ class AddProjectScreen extends StatefulWidget {
   @override
   State<AddProjectScreen> createState() => _AddProjectScreenState();
 }
-
 class _AddProjectScreenState extends State<AddProjectScreen> {
   final _formKey = GlobalKey<FormState>();
-
   final _title = TextEditingController();
   final _description = TextEditingController();
   final _technologies = TextEditingController();
   final _github = TextEditingController();
   final _demo = TextEditingController();
-
-  final _uploads = UploadService();
-  final List<String> _imageUrls = [];
-  final List<({Uint8List bytes, String extension})> _newImages = [];
-
+  final _imageLink = TextEditingController();
   bool _published = true;
   bool _busy = false;
   String? _error;
-
   bool get _isEditing => widget.project != null;
 
   // Load Project Section
@@ -47,141 +32,41 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
   @override
   void initState() {
     super.initState();
-
     final project = widget.project;
     if (project == null) return;
-
     _title.text = project.title;
     _description.text = project.description;
     _technologies.text = project.technologies.join(', ');
     _github.text = project.githubUrl;
     _demo.text = project.demoUrl;
     _published = project.isPublished;
-    _imageUrls.addAll(project.galleryImages);
+    final images = project.galleryImages;
+    _imageLink.text = images.isEmpty ? '' : images.first;
   }
 
   // Load Project End
 
-  // Choose Screenshots Section
-
-  Future<void> _chooseImages() async {
-    if (_busy) return;
-
-    setState(() {
-      _busy = true;
-      _error = null;
-    });
-
-    try {
-      final files = await openFiles(
-        acceptedTypeGroups: const [
-          XTypeGroup(
-            label: 'Project screenshots',
-            extensions: ['jpg', 'jpeg', 'png'],
-            mimeTypes: ['image/jpeg', 'image/png'],
-            uniformTypeIdentifiers: ['public.jpeg', 'public.png'],
-          ),
-        ],
-      );
-
-      if (files.isEmpty || !mounted) return;
-
-      if (_imageUrls.length + _newImages.length + files.length > 12) {
-        throw const FormatException('Choose up to 12 images per project.');
-      }
-
-      final selected = <({Uint8List bytes, String extension})>[];
-
-      for (final file in files) {
-        final extension = file.name.split('.').last.toLowerCase();
-
-        if (!['jpg', 'jpeg', 'png'].contains(extension)) {
-          throw const FormatException('Only JPG and PNG images are allowed.');
-        }
-
-        final size = await file.length();
-
-        if (size == 0 || size > 5 * 1024 * 1024) {
-          throw const FormatException(
-            'Each image must be non-empty and no larger than 5 MB.',
-          );
-        }
-
-        selected.add((
-          bytes: await file.readAsBytes(),
-          extension: extension,
-        ));
-      }
-
-      if (!mounted) return;
-
-      setState(() => _newImages.addAll(selected));
-    } on FormatException catch (error) {
-      if (mounted) {
-        setState(() => _error = error.message.toString());
-      }
-    } catch (_) {
-      if (mounted) {
-        setState(() => _error = 'Unable to select images.');
-      }
-    } finally {
-      if (mounted) {
-        setState(() => _busy = false);
-      }
-    }
-  }
-
-  // Choose Screenshots End
-
   // Save Project Section
-
   Future<void> _save() async {
     if (_busy || !_formKey.currentState!.validate()) return;
-
     if (!context.read<AuthViewModel>().isAdmin) {
       setState(() => _error = 'Please sign in as admin.');
       return;
     }
-
     final viewModel = context.read<ProjectViewModel>();
     if (viewModel.isSaving) return;
-
     FocusScope.of(context).unfocus();
-
     setState(() {
       _busy = true;
       _error = null;
     });
-
     try {
-      // Keep successful uploads if a later upload needs retrying.
-      while (_newImages.isNotEmpty) {
-        final image = _newImages.first;
-
-        final url = await _uploads.upload(
-          bytes: image.bytes,
-          folder: 'photos',
-          extension: image.extension,
-          contentType:
-              image.extension == 'png' ? 'image/png' : 'image/jpeg',
-        );
-
-        if (!mounted) return;
-
-        setState(() {
-          _imageUrls.add(url);
-          _newImages.removeAt(0);
-        });
-      }
-
-      if (!mounted) return;
-
       final project = ProjectModel(
         id: widget.project?.id ?? '',
         title: _title.text.trim(),
         description: _description.text.trim(),
-        imageUrl: _imageUrls.isEmpty ? '' : _imageUrls.first,
-        imageUrls: _imageUrls.skip(1).toList(),
+        imageUrl: _imageLink.text.trim(),
+        imageUrls: const [],
         githubUrl: _github.text.trim(),
         demoUrl: _demo.text.trim(),
         technologies: _technologies.text
@@ -192,11 +77,8 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
             .toList(),
         isPublished: _published,
       );
-
       final saved = await viewModel.saveProject(project);
-
       if (!mounted) return;
-
       if (saved) {
         Navigator.pop(context, true);
       } else {
@@ -208,7 +90,7 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
       if (mounted) {
         setState(() {
           _error =
-              'Image upload failed. Check your connection and Firebase Storage.';
+              'Unable to save project. Please try again.';
         });
       }
     } finally {
@@ -227,13 +109,13 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
     _technologies.dispose();
     _github.dispose();
     _demo.dispose();
+    _imageLink.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     final isAdmin = context.watch<AuthViewModel>().isAdmin;
-
     return Scaffold(
       appBar: AppBar(
         title: Text(_isEditing ? 'Edit Project' : 'Add Project'),
@@ -255,7 +137,6 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
   }
 
   // Project Form Section
-
   Widget _buildForm() {
     return Container(
       padding: const EdgeInsets.all(24),
@@ -292,61 +173,55 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
             _field(_technologies, 'Technologies separated by commas'),
             _field(_github, 'GitHub URL (optional)', link: true),
             _field(_demo, 'Live Demo URL (optional)', link: true),
+            _field(_imageLink, 'App Image', link: true),
             // Project Information End
-
-            // Screenshots Section
-            const Text(
-              'Project Screenshots',
-              style: TextStyle(
-                fontSize: 21,
-                fontWeight: FontWeight.bold,
-                color: Color(0xff142158),
-              ),
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              'The first image is the cover. Add up to 12 JPG or PNG images.',
-            ),
-            const SizedBox(height: 16),
-            Wrap(
-              spacing: 12,
-              runSpacing: 12,
-              children: [
-                for (int i = 0; i < _imageUrls.length; i++)
-                  _thumbnail(
-                    image: Image.network(
-                      _imageUrls[i],
-                      fit: BoxFit.contain,
-                      errorBuilder: (_, __, ___) =>
-                          const Icon(Icons.broken_image_outlined),
+            // Image Preview Section
+            ValueListenableBuilder<TextEditingValue>(
+              valueListenable: _imageLink,
+              builder: (context, value, child) {
+                final url = value.text.trim();
+                final uri = Uri.tryParse(url);
+                final valid = uri != null &&
+                    ['http', 'https'].contains(uri.scheme) &&
+                    uri.host.isNotEmpty;
+                return ClipRRect(
+                  borderRadius: BorderRadius.circular(18),
+                  child: AspectRatio(
+                    aspectRatio: 16 / 10,
+                    child: ColoredBox(
+                      color: const Color(0xffe0ebfc),
+                      child: !valid
+                          ? const Center(
+                              child: Icon(Icons.image_outlined,
+                                  size: 60, color: Color(0xff036ffc)),
+                            )
+                          : Image.network(
+                              url,
+                              key: ValueKey(url),
+                              fit: BoxFit.contain,
+                              loadingBuilder: (context, child, progress) {
+                                if (progress == null) return child;
+                                return const Center(
+                                  child: CircularProgressIndicator(),
+                                );
+                              },
+                              errorBuilder: (_, __, ___) => const Center(
+                                child: Padding(
+                                  padding: EdgeInsets.all(16),
+                                  child: Text(
+                                    'Image could not load. Check the direct image URL.',
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ),
+                              ),
+                            ),
                     ),
-                    onRemove: () {
-                      setState(() => _imageUrls.removeAt(i));
-                    },
                   ),
-                for (int i = 0; i < _newImages.length; i++)
-                  _thumbnail(
-                    image: Image.memory(
-                      _newImages[i].bytes,
-                      fit: BoxFit.contain,
-                      errorBuilder: (_, __, ___) =>
-                          const Icon(Icons.broken_image_outlined),
-                    ),
-                    onRemove: () {
-                      setState(() => _newImages.removeAt(i));
-                    },
-                  ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            OutlinedButton.icon(
-              onPressed: _busy ? null : _chooseImages,
-              icon: const Icon(Icons.add_photo_alternate_outlined),
-              label: const Text('Choose Screenshots'),
+                );
+              },
             ),
             const SizedBox(height: 20),
-            // Screenshots End
-
+            // Image Preview End
             // Publish Section
             SwitchListTile(
               contentPadding: EdgeInsets.zero,
@@ -363,7 +238,6 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
             ),
             const SizedBox(height: 20),
             // Publish End
-
             // Save Button Section
             if (_error != null) ...[
               Text(
@@ -391,48 +265,7 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
 
   // Project Form End
 
-  // Thumbnail Section
-
-  Widget _thumbnail({
-    required Widget image,
-    required VoidCallback onRemove,
-  }) {
-    return Container(
-      width: 120,
-      height: 160,
-      decoration: BoxDecoration(
-        color: const Color(0xffe0ebfc),
-        borderRadius: BorderRadius.circular(14),
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: Stack(
-        fit: StackFit.expand,
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(8),
-            child: image,
-          ),
-          Positioned(
-            top: 0,
-            right: 0,
-            child: IconButton(
-              tooltip: 'Remove from project',
-              onPressed: _busy ? null : onRemove,
-              style: IconButton.styleFrom(
-                backgroundColor: Colors.white,
-              ),
-              icon: const Icon(Icons.close, size: 18),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // Thumbnail End
-
   // Text Field Section
-
   Widget _field(
     TextEditingController controller,
     String label, {
@@ -446,6 +279,9 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
         controller: controller,
         enabled: !_busy,
         maxLines: lines,
+        keyboardType: link ? TextInputType.url : TextInputType.multiline,
+        autocorrect: !link,
+        enableSuggestions: !link,
         decoration: InputDecoration(
           labelText: label,
           alignLabelWithHint: true,
@@ -453,21 +289,17 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
         ),
         validator: (value) {
           final text = (value ?? '').trim();
-
           if (requiredField && text.isEmpty) {
             return 'This field is required.';
           }
-
           if (link && text.isNotEmpty) {
             final uri = Uri.tryParse(text);
-
             if (uri == null ||
                 !['http', 'https'].contains(uri.scheme) ||
                 uri.host.isEmpty) {
               return 'Enter a valid https:// link.';
             }
           }
-
           return null;
         },
       ),
@@ -476,5 +308,4 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
 
   // Text Field End
 }
-
 // Add And Edit Project End
