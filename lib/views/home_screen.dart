@@ -347,54 +347,85 @@ class _HomeScreenState extends State<HomeScreen> {
 
                   // Skills Section
                   _RaisedCard(
-                    key: skillsKey,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const _SectionTitle(
-                          icon: Icons.code,
-                          title: 'My Skills',
+  key: skillsKey,
+  child: Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      const _SectionTitle(
+        icon: Icons.code,
+        title: 'My Skills',
+      ),
+      const SizedBox(height: 22),
+      Wrap(
+        spacing: 16,
+        runSpacing: 16,
+        children: [
+          for (final skill in profile.skills)
+            Container(
+              width: 220,
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: const Color(0xffedf3fc),
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(color: Colors.white70),
+                boxShadow: const [
+                  BoxShadow(
+                    color: Colors.white,
+                    offset: Offset(-5, -5),
+                    blurRadius: 10,
+                  ),
+                  BoxShadow(
+                    color: Color(0xffc4d1e3),
+                    offset: Offset(5, 5),
+                    blurRadius: 10,
+                  ),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          skill,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            color: Color(0xff142158),
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
-                        const SizedBox(height: 22),
-                        Wrap(
-                          spacing: 16,
-                          runSpacing: 16,
-                          children: [
-                            for (final skill in profile.skills)
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 20,
-                                  vertical: 12,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xffedf3fc),
-                                  borderRadius: BorderRadius.circular(14),
-                                  boxShadow: const [
-                                    BoxShadow(
-                                      color: Colors.white,
-                                      offset: Offset(-3, -3),
-                                      blurRadius: 6,
-                                    ),
-                                    BoxShadow(
-                                      color: Color(0xffc4d1e3),
-                                      offset: Offset(3, 3),
-                                      blurRadius: 6,
-                                    ),
-                                  ],
-                                ),
-                                child: Text(
-                                  skill,
-                                  style: const TextStyle(
-                                    color: Color(0xff142158),
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ),
-                          ],
+                      ),
+                      const Text(
+                        '75%',
+                        style: TextStyle(
+                          color: Color(0xff036ffc),
+                          fontWeight: FontWeight.bold,
                         ),
-                      ],
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(10),
+                    child: const LinearProgressIndicator(
+                      value: 0.80,
+                      minHeight: 10,
+                      backgroundColor: Color(0xffdce5f2),
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        Color(0xff036ffc),
+                      ),
                     ),
                   ),
+                ],
+              ),
+            ),
+        ],
+      ),
+    ],
+  ),
+),
+// Skills End
                   // Skills End
 
                   const SizedBox(height: 28),
